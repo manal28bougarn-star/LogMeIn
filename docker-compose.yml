@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=logs_user
+      - POSTGRES_PASSWORD=logs_password
+      - POSTGRES_DB=logs_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - web_network
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=logs_db
+      - DB_USER=logs_user
+      - DB_PASSWORD=logs_password
+      - DB_PORT=5432
+    depends_on:
+      - db
+    networks:
+      - web_network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - web_network
+    restart: unless-stopped
+
+networks:
+  web_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
